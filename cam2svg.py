@@ -48,27 +48,27 @@ class Qrbot:
     def quit(self):
         self.driver.quit()
 
-preserbot = Qrbot(capture=True, skip_interval=10)
-preserbot.write_blank()
-preserbot.open_svg(output_path)
+qrbot = Qrbot(capture=True, skip_interval=10)
+qrbot.write_blank()
+qrbot.open_svg(output_path)
 
 try:
     while True:
-        ret, frame = preserbot.cap.read()
+        ret, frame = qrbot.cap.read()
         if not ret:
             print("Error: Failed to capture frame")
             break
         
-        preserbot.frame_count += 1
-        if preserbot.frame_count % preserbot.skip_interval != 0:
+        qrbot.frame_count += 1
+        if qrbot.frame_count % qrbot.skip_interval != 0:
             continue
         
-        qr_data = preserbot.read_qr(frame)
+        qr_data = qrbot.read_qr(frame)
         print("QR code data:", qr_data)
         
-        preserbot.refresh_svg()
+        qrbot.refresh_svg()
 
 except KeyboardInterrupt:
     print("Stopping the capture")
-    preserbot.release_cam()
-    preserbot.quit()
+    qrbot.release_cam()
+    qrbot.quit()
