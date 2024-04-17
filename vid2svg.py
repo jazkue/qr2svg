@@ -12,7 +12,7 @@ output_path = os.path.join(current_dir, "output/output.svg")
 blank_qr = os.path.join(current_dir, "output/blank.svg")
 video_path = "/Users/javierdeazkue/Documents/MAE/tesis/qr_test_black.mp4"
 
-class Preserbot:
+class Qrbot:
     def __init__(self, capture, skip_interval=1):
         self.driver = webdriver.Firefox()
         self.capture = capture
@@ -48,28 +48,28 @@ class Preserbot:
     def quit(self):
         self.driver.quit()
 
-preserbot = Preserbot(capture=True, skip_interval=10)
-preserbot.write_blank()
-preserbot.open_svg(output_path)
+qrbot = Qrbot(capture=True, skip_interval=10)
+qrbot.write_blank()
+qrbot.open_svg(output_path)
 
 try:
     while True:
-        ret, frame = preserbot.cap.read()
+        ret, frame = qrbot.cap.read()
         if not ret:
-            preserbot.cap.release()
-            preserbot.cap = cv2.VideoCapture(video_path)
+            qrbot.cap.release()
+            qrbot.cap = cv2.VideoCapture(video_path)
             continue
         
-        preserbot.frame_count += 1
-        if preserbot.frame_count % preserbot.skip_interval != 0:
+        qrbot.frame_count += 1
+        if qrbot.frame_count % qrbot.skip_interval != 0:
             continue
         
-        qr_data = preserbot.read_qr(frame)
+        qr_data = qrbot.read_qr(frame)
         print("QR code data:", qr_data)
         
-        preserbot.refresh_svg()
+        qrbot.refresh_svg()
 
 except KeyboardInterrupt:
     print("Stopping the capture")
-    preserbot.release_cap()
-    preserbot.quit()
+    qrbot.release_cap()
+    qrbot.quit()

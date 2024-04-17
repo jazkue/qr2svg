@@ -79,20 +79,20 @@ class Qrbot:
         blank.save()
 
 
-preserbot = Qrbot(capture=False)
+qrbot = Qrbot(capture=False)
 if not os.path.exists(output_path):
-    preserbot.write_blank()
-preserbot.open_svg(output_path)
+    qrbot.write_blank()
+qrbot.open_svg(output_path)
 
 try:
     while True:
-        preserbot.capture_image()
-        qr_true = preserbot.read_qr(input_path)
+        qrbot.capture_image()
+        qr_true = qrbot.read_qr(input_path)
         print(qr_true)
         if not qr_true:
-            preserbot.write_blank()
-        preserbot.refresh_svg()
+            qrbot.write_blank()
+        qrbot.refresh_svg()
 except KeyboardInterrupt:
     print("Stopping the capture")
-    preserbot.release_cam()
-    preserbot.quit()
+    qrbot.release_cam()
+    qrbot.quit()
