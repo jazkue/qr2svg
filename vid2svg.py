@@ -10,7 +10,7 @@ import svgwrite
 current_dir = os.getcwd()
 output_path = os.path.join(current_dir, "output/output.svg")
 blank_qr = os.path.join(current_dir, "output/blank.svg")
-video_path = "/Users/javierdeazkue/Documents/MAE/tesis/qr_test_black.mp4"
+video_path = "/Users/javierdeazkue/Documents/MAE/tesis/qr_white.mp4"
 
 class Qrbot:
     def __init__(self, capture, skip_interval=1):

@@ -2,11 +2,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="1920" height="1080">
     <g id="View Layer_LineSet" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" inkscape:groupmode="lineset" inkscape:label="View Layer_LineSet">
         <g xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" inkscape:groupmode="layer" id="strokes" inkscape:label="strokes">
-            <path fill="none" stroke-width="3.0" stroke-linecap="square" stroke-opacity="1.0" stroke="rgb(0, 0, 0)" stroke-linejoin="round" d=" M 1087.097, 329.297 4556.258, -964.247 " />
-            <path fill="none" stroke-width="3.0" stroke-linecap="square" stroke-opacity="1.0" stroke="rgb(0, 0, 0)" stroke-linejoin="round" d=" M -2910.408, -964.247 800.793, 321.529 800.851, 329.297 802.788, 591.541 803.044, 626.260 " />
-            <path fill="none" stroke-width="3.0" stroke-linecap="square" stroke-opacity="1.0" stroke="rgb(0, 0, 0)" stroke-linejoin="round" d=" M 803.044, 626.260 -2910.408, 6530.940 " />
-            <path fill="none" stroke-width="3.0" stroke-linecap="square" stroke-opacity="1.0" stroke="rgb(0, 0, 0)" stroke-linejoin="round" d=" M 4556.258, 6530.940 1085.550, 591.541 " />
-            <path fill="none" stroke-width="3.0" stroke-linecap="square" stroke-opacity="1.0" stroke="rgb(0, 0, 0)" stroke-linejoin="round" d=" M 800.851, 329.297 1087.097, 329.297 1085.550, 591.541 802.788, 591.541 " />
+            <path fill="none" stroke-width="3.0" stroke-linecap="square" stroke-opacity="1.0" stroke="rgb(0, 0, 0)" stroke-linejoin="round" d=" M 826.838, 328.654 1087.413, 328.654 " />
+            <path fill="none" stroke-width="3.0" stroke-linecap="square" stroke-opacity="1.0" stroke="rgb(0, 0, 0)" stroke-linejoin="round" d=" M -3114.582, -1093.072 826.838, 328.654 828.338, 571.388 " />
+            <path fill="none" stroke-width="3.0" stroke-linecap="square" stroke-opacity="1.0" stroke="rgb(0, 0, 0)" stroke-linejoin="round" d=" M 4352.084, -1093.072 1087.456, 321.462 1087.413, 328.654 1085.978, 571.388 1085.808, 600.163 " />
+            <path fill="none" stroke-width="3.0" stroke-linecap="square" stroke-opacity="1.0" stroke="rgb(0, 0, 0)" stroke-linejoin="round" d=" M 1085.808, 600.163 4352.084, 6402.115 " />
+            <path fill="none" stroke-width="3.0" stroke-linecap="square" stroke-opacity="1.0" stroke="rgb(0, 0, 0)" stroke-linejoin="round" d=" M 1085.978, 571.388 828.338, 571.388 -3114.582, 6402.115 " />
         </g>
     </g>
 </svg>
