@@ -9,7 +9,7 @@ from pyzbar.pyzbar import decode
 import svgwrite
 
 current_dir = os.getcwd()
-video_path = "/Users/javierdeazkue/Documents/MAE/tesis/qr.mov"
+video_path = "path/to/video"
 
 class Qrbot:
     def __init__(self, use_video=True, skip_interval=1):
