@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import subprocess
 import urllib.parse
@@ -9,10 +10,13 @@ from pyzbar.pyzbar import decode
 import svgwrite
 
 current_dir = os.getcwd()
-video_path = "path/to/video"
+try:
+    video_path = sys.argv[1]
+except IndexError:
+    video_path = None
 
 class Qrbot:
-    def __init__(self, use_video=True, skip_interval=1):
+    def __init__(self, skip_interval=1):
         self.options = webdriver.ChromeOptions()
         self.options.add_argument("--kiosk")
         self.options.add_experimental_option("excludeSwitches", ['enable-automation'])
@@ -20,7 +24,7 @@ class Qrbot:
 
         self.skip_interval = skip_interval
         self.frame_count = 0
-        if use_video:
+        if video_path:
             self.cap = cv2.VideoCapture(video_path)
         else:
             self.cap = cv2.VideoCapture(0)
@@ -45,7 +49,7 @@ class Qrbot:
     def quit(self):
         self.driver.quit()
 
-qrbot = Qrbot(use_video=True, skip_interval=1)
+qrbot = Qrbot(skip_interval=1)
 try:
     while True:
         ret, frame = qrbot.cap.read()
