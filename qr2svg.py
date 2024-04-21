@@ -32,8 +32,8 @@ class Qrbot:
     def read_qr(self, frame):
         decoded_objs = decode(frame)
         if decoded_objs:
-            qr_data = decoded_objs[0].data.decode('utf-8')
-            svg_data_url = "data:image/svg+xml;charset=utf-8," + urllib.parse.quote(qr_data)
+            qr_data = decoded_objs[0].data.decode('ascii')
+            svg_data_url = "data:image/svg+xml;charset=ascii," + urllib.parse.quote(qr_data)
             self.driver.get(svg_data_url)
             return True
         else:
@@ -49,18 +49,31 @@ class Qrbot:
     def quit(self):
         self.driver.quit()
 
-qrbot = Qrbot(skip_interval=1)
+    def show_preview(self, frame):
+        try:
+            cv2.imshow('Preview', frame)
+            cv2.waitKey(1)
+        except Exception as e:
+            print("Error in displaying preview:", e)
+
+qrbot = Qrbot(skip_interval=10)
 try:
     while True:
         ret, frame = qrbot.cap.read()
         if not ret:
-            print("Error: Failed to capture frame")
-            break
+            if video_path:
+                print("LOOP")
+                qrbot.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                continue
+            else:
+                print("Error: Failed to capture frame")
+                break
         
         qrbot.frame_count += 1
         if qrbot.frame_count % qrbot.skip_interval != 0:
             continue
         
+        qrbot.show_preview(frame)
         qr_data = qrbot.read_qr(frame)
         print("QR code data:", qr_data)
 except KeyboardInterrupt:
