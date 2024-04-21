@@ -21,6 +21,7 @@ class Qrbot:
         self.options.add_argument("--kiosk")
         self.options.add_experimental_option("excludeSwitches", ['enable-automation'])
         self.driver = webdriver.Chrome(self.options)
+        self.buffer = "<?xml version='1.0' encoding='ascii'?><svg xmlns='http://www.w3.org/2000/svg' version='1.1' width='1920' height='1200'> <rect width='100%' height='100%' fill='black' /></svg>"
 
         self.skip_interval = skip_interval
         self.frame_count = 0
@@ -33,12 +34,12 @@ class Qrbot:
         decoded_objs = decode(frame)
         if decoded_objs:
             qr_data = decoded_objs[0].data.decode('ascii')
+            self.buffer = qr_data
             svg_data_url = "data:image/svg+xml;charset=ascii," + urllib.parse.quote(qr_data)
             self.driver.get(svg_data_url)
             return True
         else:
-            blank = "<?xml version='1.0' encoding='ascii'?><svg xmlns='http://www.w3.org/2000/svg' version='1.1' width='1920' height='1200'> <rect width='100%' height='100%' fill='black' /></svg>"
-            svg_data_url = "data:image/svg+xml;charset=utf-8," + blank
+            svg_data_url = "data:image/svg+xml;charset=utf-8," + self.buffer
             self.driver.get(svg_data_url)
             return False
 
