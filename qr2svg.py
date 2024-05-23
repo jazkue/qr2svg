@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import time
 import subprocess
@@ -6,7 +7,8 @@ import urllib.parse
 
 import cv2
 from selenium import webdriver
-from pyzbar.pyzbar import decode
+from pyzbar.pyzbar import decode, ZBarSymbol
+
 import svgwrite
 
 current_dir = os.getcwd()
@@ -21,7 +23,7 @@ class Qrbot:
         self.options.add_argument("--kiosk")
         self.options.add_experimental_option("excludeSwitches", ['enable-automation'])
         self.driver = webdriver.Chrome(self.options)
-        self.buffer = "<?xml version='1.0' encoding='ascii'?><svg xmlns='http://www.w3.org/2000/svg' version='1.1' width='1920' height='1200'> <rect width='100%' height='100%' fill='black' /></svg>"
+        self.buffer = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 240'><path d='M0 0h384v240H0z'/></svg>"
 
         self.skip_interval = skip_interval
         self.frame_count = 0
@@ -31,11 +33,16 @@ class Qrbot:
             self.cap = cv2.VideoCapture(0)
 
     def read_qr(self, frame):
-        decoded_objs = decode(frame)
+        decoded_objs = decode(frame, symbols=[ZBarSymbol.QRCODE])
         if decoded_objs:
             qr_data = decoded_objs[0].data.decode('ascii')
+            match = re.search(r'<svg.*?>.*?</svg>', qr_data, re.DOTALL)
+            if match:
+                qr_data = match.group(0).strip()
+            else:
+                print("Pattern not found, using whole data")
             self.buffer = qr_data
-            svg_data_url = "data:image/svg+xml;charset=ascii," + urllib.parse.quote(qr_data)
+            svg_data_url = "data:image/svg+xml," + urllib.parse.quote(qr_data)
             self.driver.get(svg_data_url)
             return True
         else:
@@ -74,7 +81,7 @@ try:
         if qrbot.frame_count % qrbot.skip_interval != 0:
             continue
         
-        qrbot.show_preview(frame)
+        # qrbot.show_preview(frame)
         qr_data = qrbot.read_qr(frame)
         print("QR code data:", qr_data)
 except KeyboardInterrupt:

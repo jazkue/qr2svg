@@ -1,0 +1,7 @@
+BEGIN:VCARD
+VERSION:4.0
+TITLE:test
+FN:this is a test
+URL:data:image/svg+xml,<svg should go here>
+NOTE:you should encode this VCARD  as a qr using the qrify tool. qr2svg will look for a <svg> in here.
+END:VCARD
