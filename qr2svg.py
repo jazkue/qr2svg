@@ -1,11 +1,9 @@
 import os
 import re
 import sys
-import time
-import subprocess
 import urllib.parse
-import threading
-import numpy
+import numpy as np
+import pyboof as pb
 
 import cv2
 from selenium import webdriver
@@ -17,8 +15,30 @@ try:
 except IndexError:
     video_path = None
 
+# pb.init_memmap() #Optional
+
+class QR_Extractor:
+    # Src: github.com/lessthanoptimal/PyBoof/blob/master/examples/qrcode_detect.py
+    def __init__(self):
+        self.detector = pb.FactoryFiducial(np.uint8).qrcode()
+    
+    def extract(self, img_path):
+        # if not os.path.isfile(img_path):
+        #     print('File not found:', img_path)
+        #     return None
+        image = pb.ndarray_to_boof(img_path)
+
+        self.detector.detect(image)
+        qr_codes = []
+        for qr in self.detector.detections:
+            qr_codes.append({
+                'text': qr.message,
+                'points': qr.bounds.convert_tuple()
+            })
+        return qr_codes
+
 class Capture:
-    def __init__(self, skip_interval=1):
+    def __init__(self, skip_interval=0):
         self.frame_count = 0
         self.skip_interval = skip_interval
         if video_path:
@@ -42,7 +62,7 @@ class Capture:
                 return True
 
     def contrast(self, frame, brightness=0, contrast=2):
-        return cv2.addWeighted(frame, contrast, numpy.zeros(frame.shape, frame.dtype), 0, brightness)
+        return cv2.addWeighted(frame, contrast, np.zeros(frame.shape, frame.dtype), 0, brightness)
 
     def desaturate(self, frame):
         return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -65,11 +85,14 @@ class Qrbot:
         self.options.add_experimental_option("excludeSwitches", ['enable-automation'])
         self.driver = webdriver.Chrome(self.options)
         self.buffer = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 240'><path d='M0 0h384v240H0z'/></svg>"
+        self.qr_scanner = QR_Extractor()
 
     def read_qr(self, frame):
-        decoded_objs = decode(frame, symbols=[ZBarSymbol.QRCODE])
+        # decoded_objs = decode(frame, symbols=[ZBarSymbol.QRCODE])
+        decoded_objs = self.qr_scanner.extract(frame)
         if decoded_objs:
-            qr_data = decoded_objs[0].data.decode('utf-8')
+            decoded, = decoded_objs
+            qr_data = decoded["text"]
             match = re.search(r'<svg.*?>.*?</svg>', qr_data, re.DOTALL)
             if match:
                 qr_data = match.group(0).strip()
@@ -105,7 +128,7 @@ try:
             continue
 
         # frame = cap.contrast(frame)
-        # frame = cap.desaturate(frame)
+        frame = cap.desaturate(frame)
         cap.show_preview(frame)
 
         qr_data = qrbot.read_qr(frame)
