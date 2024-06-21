@@ -7,7 +7,6 @@ import pyboof as pb
 
 import cv2
 from selenium import webdriver
-from pyzbar.pyzbar import decode, ZBarSymbol
 
 current_dir = os.getcwd()
 try:
@@ -15,18 +14,12 @@ try:
 except IndexError:
     video_path = None
 
-# pb.init_memmap() #Optional
-
 class QR_Extractor:
-    # Src: github.com/lessthanoptimal/PyBoof/blob/master/examples/qrcode_detect.py
     def __init__(self):
         self.detector = pb.FactoryFiducial(np.uint8).qrcode()
     
-    def extract(self, img_path):
-        # if not os.path.isfile(img_path):
-        #     print('File not found:', img_path)
-        #     return None
-        image = pb.ndarray_to_boof(img_path)
+    def extract(self, img):
+        image = pb.ndarray_to_boof(img)
 
         self.detector.detect(image)
         qr_codes = []
@@ -61,7 +54,7 @@ class Capture:
             if self.frame_count % self.skip_interval != 0:
                 return True
 
-    def contrast(self, frame, brightness=0, contrast=2):
+    def contrast(self, frame, brightness=0, contrast=1):
         return cv2.addWeighted(frame, contrast, np.zeros(frame.shape, frame.dtype), 0, brightness)
 
     def desaturate(self, frame):
@@ -85,12 +78,13 @@ class Qrbot:
         self.options.add_experimental_option("excludeSwitches", ['enable-automation'])
         self.driver = webdriver.Chrome(self.options)
         self.buffer = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 240'><path d='M0 0h384v240H0z'/></svg>"
+        self.new_opacity = 255
         self.qr_scanner = QR_Extractor()
 
     def read_qr(self, frame):
-        # decoded_objs = decode(frame, symbols=[ZBarSymbol.QRCODE])
         decoded_objs = self.qr_scanner.extract(frame)
         if decoded_objs:
+            self.new_opacity = 255
             decoded, = decoded_objs
             qr_data = decoded["text"]
             match = re.search(r'<svg.*?>.*?</svg>', qr_data, re.DOTALL)
@@ -104,14 +98,17 @@ class Qrbot:
             return True
         else:
             svg_data_url = "data:image/svg+xml;charset=utf-8," + self.buffer
-            self.driver.get(svg_data_url)
+            self.driver.get(svg_data_url.replace("white", "rgb({0},{0},{0})".format(self.new_opacity)))
+            self.new_opacity = self.new_opacity - 1
+            print("rgb({0},{0},{0})".format(self.new_opacity))
+
             return False
         
     def quit(self):
         self.driver.quit()
 
 qrbot = Qrbot()
-cap = Capture(skip_interval=1)
+cap = Capture(skip_interval=0)
 
 try:
     while True:
@@ -127,9 +124,9 @@ try:
         if cap.skip():
             continue
 
-        # frame = cap.contrast(frame)
+        frame = cap.contrast(frame)
         frame = cap.desaturate(frame)
-        cap.show_preview(frame)
+        # cap.show_preview(frame)
 
         qr_data = qrbot.read_qr(frame)
         print("QR code data:", qr_data)
