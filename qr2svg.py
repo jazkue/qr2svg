@@ -87,11 +87,6 @@ class Qrbot:
             self.new_opacity = 255
             decoded, = decoded_objs
             qr_data = decoded["text"]
-            match = re.search(r'<svg.*?>.*?</svg>', qr_data, re.DOTALL)
-            if match:
-                qr_data = match.group(0).strip()
-            else:
-                print("Pattern not found, using whole data")
             self.buffer = qr_data
             svg_data_url = "data:image/svg+xml," + urllib.parse.quote(qr_data)
             self.driver.get(svg_data_url)
@@ -99,8 +94,7 @@ class Qrbot:
         else:
             svg_data_url = "data:image/svg+xml;charset=utf-8," + self.buffer
             self.driver.get(svg_data_url.replace("white", "rgb({0},{0},{0})".format(self.new_opacity)))
-            self.new_opacity = self.new_opacity - 1
-            print("rgb({0},{0},{0})".format(self.new_opacity))
+            self.new_opacity = self.new_opacity - 2
 
             return False
         
