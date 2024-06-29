@@ -92,9 +92,9 @@ class Qrbot:
             self.driver.get(svg_data_url)
             return True
         else:
-            svg_data_url = "data:image/svg+xml;charset=utf-8," + self.buffer
+            svg_data_url = "data:image/svg+xml," + urllib.parse.quote(self.buffer)
             self.driver.get(svg_data_url.replace("white", "rgb({0},{0},{0})".format(self.new_opacity)))
-            self.new_opacity = self.new_opacity - 2
+            self.new_opacity = self.new_opacity - 5
 
             return False
         
