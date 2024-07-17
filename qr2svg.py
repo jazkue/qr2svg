@@ -72,16 +72,22 @@ class Capture:
         cv2.destroyAllWindows()
 
 class Qrbot:
-    def __init__(self):
+    def __init__(self, show_text=False):
+        self.qr_scanner = QR_Extractor()
         self.options = webdriver.ChromeOptions()
         self.options.add_argument("--kiosk")
         self.options.add_experimental_option("excludeSwitches", ['enable-automation'])
         self.driver = webdriver.Chrome(self.options)
         self.buffer = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 240'><path d='M0 0h384v240H0z'/></svg>"
-        self.new_opacity = 255
-        self.qr_scanner = QR_Extractor()
-        self.svg_name = ''
+        self.new_opacity = 0
 
+        self.show_text = show_text
+        if self.show_text:
+            self.svg_name = ''
+            self.svg_text = ''
+            self.text_format = '<text x="6" y="10" fill="rgb(255,255,255)" font-size="5" font-family="Arial">'
+            self.svg_no_qr = self.text_format + "QR Code: False" + '</text>'
+        
     def read_qr(self, frame):
         decoded_objs = self.qr_scanner.extract(frame)
         if decoded_objs:
@@ -90,20 +96,25 @@ class Qrbot:
             qr_data = decoded["text"]
             self.buffer = qr_data
 
-            pattern = r'<!--\s*(\w+\.svg)'
-            match = re.search(pattern, qr_data)
-            if match:
-                self.svg_name = match.group(1)
+            if self.show_text:
+                pattern = r'<!--\s*(\w+\.svg)'
+                match = re.search(pattern, qr_data)
+                if match:
+                    self.svg_name = match.group(1)
+                    self.svg_text = '{}{}</text>'.format(self.text_format, self.svg_name)
+                    qr_data = qr_data.replace('</svg>', '{}</svg>'.format(self.svg_text))
 
-            svg_data_url = "data:image/svg+xml," + urllib.parse.quote(qr_data.replace('</svg>', '<text x="6" y="10" fill="rgb(255,255,255)" font-size="5" font-family="Arial">{}</text></svg>'.format(self.svg_name)))
-            self.driver.get(svg_data_url.replace('</svg>', '<text x="6" y="10" fill="rgb(255,255,255)" font-size="5" font-family="Arial">QR Code: False</text></svg>'))
+            svg_data_url = "data:image/svg+xml," + urllib.parse.quote(qr_data)
+            self.driver.get(svg_data_url)
             return True
         else:
-            if self.new_opacity > 0:
-                svg_replace = '<text x="6" y="10" fill="rgb(255,255,255)" font-size="5" font-family="Arial">{}</text></svg>'.format(self.svg_name)
-            else:
-                svg_replace = '<text x="6" y="10" fill="rgb(255,255,255)" font-size="5" font-family="Arial">QR Code: False</text></svg>'
-            svg_data_url = "data:image/svg+xml," + urllib.parse.quote(self.buffer.replace('</svg>', svg_replace))
+            if self.show_text:
+                if self.new_opacity > 0:
+                    svg_replace = '{}</svg>'.format(self.svg_text)
+                else:
+                    svg_replace = '{}</svg>'.format(self.svg_no_qr)
+                svg_data_url = "data:image/svg+xml," + urllib.parse.quote(self.buffer.replace('</svg>', svg_replace))
+            
             self.driver.get(svg_data_url.replace("white", "rgb({0},{0},{0})".format(self.new_opacity)))
             self.new_opacity = self.new_opacity - 10
 
@@ -112,7 +123,7 @@ class Qrbot:
     def quit(self):
         self.driver.quit()
 
-qrbot = Qrbot()
+qrbot = Qrbot(show_text=False)
 cap = Capture(skip_interval=0)
 
 try:
