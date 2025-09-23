@@ -4,7 +4,6 @@ import sys
 import urllib.parse
 import numpy as np
 import pyboof as pb
-
 import cv2
 from selenium import webdriver
 
@@ -20,7 +19,6 @@ class QR_Extractor:
     
     def extract(self, img):
         image = pb.ndarray_to_boof(img)
-
         self.detector.detect(image)
         qr_codes = []
         for qr in self.detector.detections:
@@ -79,51 +77,70 @@ class Qrbot:
         self.options.add_experimental_option("excludeSwitches", ['enable-automation'])
         self.driver = webdriver.Chrome(self.options)
         self.buffer = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 240'><path d='M0 0h384v240H0z'/></svg>"
-        self.new_opacity = 0
-
+        self.new_opacity = 0.0
         self.show_text = show_text
+        self.last_qr_text = None  # Track last QR content
+
+        # Prepare static HTML page with container for dynamic SVG updates
+        html_template = f"""
+        <html><body style='margin:0; background:black;'>
+        <div id='qr_container'>
+        <div style="opacity:0;">{self.buffer}</div>
+        </div>
+        </body></html>
+        """
+        self.driver.get("data:text/html," + urllib.parse.quote(html_template))
+
         if self.show_text:
             self.svg_name = ''
             self.svg_text = ''
             self.text_format = '<text x="6" y="10" fill="rgb(255,255,255)" font-size="5" font-family="Arial">'
             self.svg_no_qr = self.text_format + "QR Code: False" + '</text>'
-        
+
     def read_qr(self, frame):
         decoded_objs = self.qr_scanner.extract(frame)
+
         if decoded_objs:
-            self.new_opacity = 255
             decoded, = decoded_objs
             qr_data = decoded["text"]
-            self.buffer = qr_data
 
-            if self.show_text:
-                pattern = r'<!--\s*(\w+\.svg)'
-                match = re.search(pattern, qr_data)
-                if match:
-                    self.svg_name = match.group(1)
-                    self.svg_text = '{}{}</text>'.format(self.text_format, self.svg_name)
-                    qr_data = qr_data.replace('</svg>', '{}</svg>'.format(self.svg_text))
+            # Always reset opacity if QR detected
+            self.new_opacity = 1.0
 
-            svg_data_url = "data:image/svg+xml," + urllib.parse.quote(qr_data)
-            self.driver.get(svg_data_url)
-            return True
+            # Update buffer only if content changed
+            if qr_data != self.last_qr_text:
+                self.last_qr_text = qr_data
+
+                if self.show_text:
+                    pattern = r'<!--\s*(\w+\.svg)'
+                    match = re.search(pattern, qr_data)
+                    if match:
+                        self.svg_name = match.group(1)
+                        self.svg_text = f'{self.text_format}{self.svg_name}</text>'
+                        qr_data = qr_data.replace('</svg>', f'{self.svg_text}</svg>')
+
+                self.buffer = qr_data
+
         else:
-            if self.show_text:
-                if self.new_opacity > 0:
-                    svg_replace = '{}</svg>'.format(self.svg_text)
-                else:
-                    svg_replace = '{}</svg>'.format(self.svg_no_qr)
-                svg_data_url = "data:image/svg+xml," + urllib.parse.quote(self.buffer.replace('</svg>', svg_replace))
-            
-            self.driver.get(svg_data_url.replace("white", "rgb({0},{0},{0})".format(self.new_opacity)))
-            self.new_opacity = self.new_opacity - 10
+            # Fade-out
+            if self.new_opacity > 0:
+                self.new_opacity = max(0.0, self.new_opacity - 0.05)  # adjust fade speed
 
-            return False
-        
+        # Always render with current opacity
+        svg_to_render = f'<div style="opacity:{self.new_opacity};">{self.buffer}</div>'
+        self.driver.execute_script(
+            "document.getElementById('qr_container').innerHTML = arguments[0];",
+            svg_to_render
+        )
+
+        return bool(decoded_objs)
+
+
     def quit(self):
         self.driver.quit()
 
-qrbot = Qrbot(show_text=False)
+
+qrbot = Qrbot(show_text=True)
 cap = Capture(skip_interval=0)
 
 try:
@@ -144,8 +161,8 @@ try:
         frame = cap.desaturate(frame)
         # cap.show_preview(frame)
 
-        qr_data = qrbot.read_qr(frame)
-        print("QR code data:", qr_data)
+        qr_detected = qrbot.read_qr(frame)
+        print("QR code detected:", qr_detected)
 
 except KeyboardInterrupt:
     print("Stopping the capture")
