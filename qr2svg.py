@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import time
 import urllib.parse
 import numpy as np
 import pyboof as pb
@@ -8,10 +9,7 @@ import cv2
 from selenium import webdriver
 
 current_dir = os.getcwd()
-try:
-    video_path = sys.argv[1]
-except IndexError:
-    video_path = None
+video_path = None  # Using camera
 
 class QR_Extractor:
     def __init__(self):
@@ -32,19 +30,15 @@ class Capture:
     def __init__(self, skip_interval=0):
         self.frame_count = 0
         self.skip_interval = skip_interval
-        if video_path:
-            self.cap = cv2.VideoCapture(video_path)
-        else:
-            self.cap = cv2.VideoCapture(0)
+        self.cap = cv2.VideoCapture(0)
+        if not self.cap.isOpened():
+            print("Failed to open camera")
+            sys.exit(1)
 
     def read(self):
         ret, frame = self.cap.read()
         if ret:
             return frame
-
-    def loop(self):
-        print("LOOP")
-        self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
 
     def skip(self):
         if self.skip_interval:
@@ -124,7 +118,7 @@ class Qrbot:
         else:
             # Fade-out
             if self.new_opacity > 0:
-                self.new_opacity = max(0.0, self.new_opacity - 0.05)  # adjust fade speed
+                self.new_opacity = max(0.0, self.new_opacity - 0.01)  # adjust fade speed
 
         # Always render with current opacity
         svg_to_render = f'<div style="opacity:{self.new_opacity};">{self.buffer}</div>'
@@ -134,7 +128,6 @@ class Qrbot:
         )
 
         return bool(decoded_objs)
-
 
     def quit(self):
         self.driver.quit()
@@ -147,12 +140,10 @@ try:
     while True:
         frame = cap.read()
         if frame is None:
-            if video_path:
-                cap.loop()
-                continue
-            else:
-                print("Error: Failed to capture frame")
-                break
+            # Skip failed frames
+            print("Warning: Failed to capture frame, retrying...")
+            time.sleep(0.01)
+            continue
 
         if cap.skip():
             continue
